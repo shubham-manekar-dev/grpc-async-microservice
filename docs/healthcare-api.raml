@@ -1,0 +1,95 @@
+#%RAML 1.0
+title: Healthcare AI POC API
+version: v1
+baseUri: http://localhost:8000
+mediaType: application/json
+
+types:
+  VitalSigns:
+    type: object
+    properties:
+      temperature_c: number
+      heart_rate_bpm: integer
+      systolic_bp_mm_hg: integer
+      diastolic_bp_mm_hg: integer
+  Patient:
+    type: object
+    properties:
+      id: integer
+      name: string
+      date_of_birth: date-only
+      allergies: string[]
+      active_conditions: string[]
+  PatientCreate:
+    type: object
+    properties:
+      name: string
+      date_of_birth: date-only
+      allergies?: string[]
+      active_conditions?: string[]
+    required: [name, date_of_birth]
+  IntakeRequest:
+    type: object
+    properties:
+      symptoms: string[]
+      vitals: VitalSigns
+  CarePlan:
+    type: object
+    properties:
+      summary: string
+      suggested_tests: string[]
+      triage_level: string
+  IntakeResponse:
+    type: object
+    properties:
+      patient: Patient
+      care_plan: CarePlan
+
+/health:
+  get:
+    description: Service heartbeat check.
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              status: ok
+
+/patients:
+  get:
+    description: List all registered patients.
+    responses:
+      200:
+        body:
+          application/json:
+            type: Patient[]
+  post:
+    description: Register a new patient.
+    body:
+      application/json:
+        type: PatientCreate
+    responses:
+      201:
+        body:
+          application/json:
+            type: Patient
+
+/intake/{patient_id}:
+  uriParameters:
+    patient_id:
+      type: integer
+  post:
+    description: Run the AI-enabled intake flow for a patient.
+    body:
+      application/json:
+        type: IntakeRequest
+    responses:
+      200:
+        body:
+          application/json:
+            type: IntakeResponse
+      404:
+        body:
+          application/json:
+            example:
+              detail: Patient not found

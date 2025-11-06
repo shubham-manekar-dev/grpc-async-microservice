@@ -5,4 +5,8 @@ __pycache__/
 node_modules/
 dist/
 frontend/.vite/
+java-tests/target/
 .DS_Store
+data/
+test.db
+docs/live-topology.png

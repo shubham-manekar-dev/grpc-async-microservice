@@ -1,0 +1,152 @@
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: bitnami/kafka:3.6
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: care_records
+      POSTGRES_USER: care_admin
+      POSTGRES_PASSWORD: care_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  grpc:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "app.grpc_server"]
+    environment:
+      GEN_AI_PROVIDER: ${GEN_AI_PROVIDER:-heuristic}
+      GEN_AI_API_KEY: ${GEN_AI_API_KEY:-}
+      GEN_AI_ENDPOINT: ${GEN_AI_ENDPOINT:-}
+    ports:
+      - "50051:50051"
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "python", "-c", "import grpc;grpc.insecure_channel('localhost:50051').channel_ready_future().result(timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      CARE_PLAN_GRPC_TARGET: grpc:50051
+      DATABASE_URL: postgresql+psycopg2://care_admin:care_password@postgres:5432/care_records
+      MONGO_URL: mongodb://mongodb:27017
+      MONGO_DB: care_intelligence
+      MONGO_COLLECTION: intake_audit
+      REDIS_URL: redis://redis:6379/0
+      REDIS_TTL_SECONDS: 120
+      KAFKA_ENABLED: "true"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: care-events
+      JWT_SECRET_KEY: local-dev-secret
+      GEN_AI_PROVIDER: ${GEN_AI_PROVIDER:-heuristic}
+      GEN_AI_API_KEY: ${GEN_AI_API_KEY:-}
+      GEN_AI_ENDPOINT: ${GEN_AI_ENDPOINT:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      grpc:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_started
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+    volumes:
+      - backend_data:/data
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      VITE_API_BASE_URL: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana-oss:10.3.1
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.1
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+volumes:
+  backend_data:
+  postgres_data:
+  mongodb_data:
+  elastic_data:

@@ -9,4 +9,5 @@ java-tests/target/
 .DS_Store
 data/
 test.db
+ci-smoke.db
 docs/live-topology.png

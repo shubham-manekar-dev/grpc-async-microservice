@@ -15,6 +15,6 @@ public class RamlContractTest {
         List<String> lines = Files.readAllLines(contract);
         String joined = String.join("\n", lines);
         Assert.assertTrue(joined.contains("/patients:"), "Patients collection missing from RAML");
-        Assert.assertTrue(joined.contains("/intake/{patientId}:"), "Intake resource missing from RAML");
+        Assert.assertTrue(joined.contains("/intake/{patient_id}:"), "Intake resource missing from RAML");
     }
 }

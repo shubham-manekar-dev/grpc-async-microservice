@@ -17,8 +17,8 @@ class Patient(BaseModel):
     id: int = Field(..., ge=1)
     name: str = Field(..., min_length=1)
     date_of_birth: date
-    allergies: List[str] = []
-    active_conditions: List[str] = []
+    allergies: List[str] = Field(default_factory=list)
+    active_conditions: List[str] = Field(default_factory=list)
 
 
 class PatientCreate(BaseModel):

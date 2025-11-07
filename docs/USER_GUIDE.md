@@ -31,11 +31,19 @@ Install the following tooling locally:
 
 ## 2. Boot the full stack
 
+Launch everything with the guided startup script (ideal for the VS Code terminal):
+
 ```bash
-docker compose up --build
+./scripts/start_project.sh
 ```
 
-Wait for the services to report healthy in the logs. The stack exposes:
+The helper verifies Docker prerequisites, seeds a `.env` with heuristic AI defaults, builds the images,
+and waits for `/health` plus `/integrations` before printing the key URLs.
+
+Prefer to control the stack manually? Run `docker compose up --build` and wait for the logs to show
+all services as healthy.
+
+The stack exposes:
 
 | Service | URL | Notes |
 |---------|-----|-------|

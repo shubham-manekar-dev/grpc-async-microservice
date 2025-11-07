@@ -101,6 +101,19 @@ artifacts.
    - For Gemini: set `GEN_AI_PROVIDER=gemini`, `GEN_AI_MODEL=gemini-pro`, and export `GEN_AI_API_KEY`.
    - Leave the variables unset to rely on the deterministic heuristic generator during demos.
 
+4. **Start the full stack (guided script recommended)**
+   ```bash
+   ./scripts/start_project.sh
+   ```
+   The script checks prerequisites, confirms no merge-conflict markers remain via `scripts/check_merge_conflicts.sh`,
+   seeds a `.env` with heuristic AI defaults, builds the Docker images, waits for `/health` and `/integrations`,
+   and prints the key URLs once everything is ready.
+
+   Prefer to drive things manually? Run `docker compose up --build` and keep the logs open (or use
+   `make docker-logs`) until the services report healthy.
+
+   > **Heads up:** If you skip the helper and start the stack manually, run `make check-conflicts` first so the next
+   > pull request does not fail on the merge-conflict guard that runs in CI.
 4. **Start the full stack (Docker-first path)**
    ```bash
    docker compose up --build

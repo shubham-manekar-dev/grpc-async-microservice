@@ -101,15 +101,13 @@ artifacts.
    - For Gemini: set `GEN_AI_PROVIDER=gemini`, `GEN_AI_MODEL=gemini-pro`, and export `GEN_AI_API_KEY`.
    - Leave the variables unset to rely on the deterministic heuristic generator during demos.
 
-4. **Start the full stack (guided script recommended)**
+4. **Start the full stack (Docker-first path)**
    ```bash
-   ./scripts/start_project.sh
+   docker compose up --build
    ```
-   The script checks prerequisites, seeds a `.env` with heuristic AI defaults, builds the Docker images,
-   waits for `/health` and `/integrations`, and prints the key URLs once everything is ready.
-
-   Prefer to drive things manually? Run `docker compose up --build` and keep the logs open (or use
-   `make docker-logs`) until the services report healthy.
+   The command provisions PostgreSQL, MongoDB, Redis, Kafka, Zookeeper, FastAPI, the gRPC service,
+   Prometheus/Grafana, Kibana, and the React console. Keep the logs open or use
+   `make docker-logs` for a cleaner tail.
 
 5. **Smoke test the API**
    ```bash

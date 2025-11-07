@@ -1,6 +1,6 @@
 # Healthcare AI Experience
 
-FastAPI and
+
 React microservices orchestrated with gRPC, Kafka, Postgres, MongoDB, Redis
 caching, and AI-assisted care planning. The project demonstrates how to weave
 secure APIs, generative intelligence, and production-grade automation together

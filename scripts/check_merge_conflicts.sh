@@ -20,5 +20,16 @@ for pattern in "${patterns[@]}"; do
     exit 1
   fi
 done
+if git grep -n "<<<<<<< " -- . >/dev/null 2>&1; then
+  echo "Merge conflict markers detected. Please resolve before committing." >&2
+  git grep -n "<<<<<<< " -- . >&2
+  exit 1
+fi
+
+if git grep -n ">>>>>>>" -- . >/dev/null 2>&1; then
+  echo "Merge conflict markers detected. Please resolve before committing." >&2
+  git grep -n ">>>>>>>" -- . >&2
+  exit 1
+fi
 
 echo "No merge conflict markers detected."

@@ -114,6 +114,13 @@ artifacts.
 
    > **Heads up:** If you skip the helper and start the stack manually, run `make check-conflicts` first so the next
    > pull request does not fail on the merge-conflict guard that runs in CI.
+4. **Start the full stack (Docker-first path)**
+   ```bash
+   docker compose up --build
+   ```
+   The command provisions PostgreSQL, MongoDB, Redis, Kafka, Zookeeper, FastAPI, the gRPC service,
+   Prometheus/Grafana, Kibana, and the React console. Keep the logs open or use
+   `make docker-logs` for a cleaner tail.
 
 5. **Smoke test the API**
    ```bash

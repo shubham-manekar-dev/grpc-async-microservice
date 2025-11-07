@@ -48,6 +48,11 @@ all services as healthy.
 > when you open the next pull request.
 
 The stack exposes:
+```bash
+docker compose up --build
+```
+
+Wait for the services to report healthy in the logs. The stack exposes:
 
 | Service | URL | Notes |
 |---------|-----|-------|

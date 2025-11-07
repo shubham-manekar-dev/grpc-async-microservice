@@ -13,8 +13,8 @@ cd grpc-async-microservice
 git checkout create-mini-projet-with-demo
 ```
 
-The feature branch keeps the folder structure clean (no `codex/` prefix) so
-paths match the recruiter screenshots and CI logs.
+The feature branch keeps the folder structure rooted under a `POC/` prefix so
+your local paths mirror the recruiter screenshots and CI logs (`POC/create-mini-project-with-demo-zizq9h`).
 
 ## 1. Prerequisites
 

@@ -11,3 +11,5 @@ data/
 test.db
 ci-smoke.db
 docs/live-topology.png
+docs/workflow.apng
+docs/workflow.apng.data-uri

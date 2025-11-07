@@ -2,7 +2,19 @@
 
 This guide walks through the full recruiter demo experience: provisioning the
 stack, running automated tests, exploring the APIs, and validating the
-generative AI workflow.
+generative AI workflow. Start by opening [`docs/workflow.apng`](workflow.apng)
+to see the animated journey recruiters watch during the live walkthrough.
+
+## 0. Clone the repository
+
+```bash
+git clone https://github.com/shubham-manekar-dev/grpc-async-microservice.git
+cd grpc-async-microservice
+git checkout create-mini-projet-with-demo
+```
+
+The feature branch keeps the folder structure rooted under a `POC/` prefix so
+your local paths mirror the recruiter screenshots and CI logs (`POC/create-mini-project-with-demo-zizq9h`).
 
 ## 1. Prerequisites
 

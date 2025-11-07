@@ -70,6 +70,9 @@ for entry in "${OPTIONAL_CMDS[@]}"; do
   fi
 done
 
+step "Scanning repository for merge conflict markers"
+./scripts/check_merge_conflicts.sh
+
 ENV_FILE="$PROJECT_ROOT/.env"
 if [[ ! -f "$ENV_FILE" ]]; then
   step "Seeding optional .env (heuristic defaults)"

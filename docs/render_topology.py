@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import base64
 import struct
 import zlib
 from dataclasses import dataclass
@@ -288,158 +287,12 @@ def write_svg(path: Path, rects: Sequence[RectSpec], labels: Sequence[TextLabel]
     path.write_text("\n".join(lines))
 
 
-def lighten(color: Tuple[int, int, int], factor: float = 0.35) -> Tuple[int, int, int]:
-    return tuple(min(255, int(channel + (255 - channel) * factor)) for channel in color)
-
-
-@dataclass(frozen=True)
-class FrameSpec:
-    highlight_rects: Sequence[int]
-    overlay: Sequence[TextLabel]
-
-
-def build_frames(rects: Sequence[RectSpec]) -> List[FrameSpec]:
-    return [
-        FrameSpec(
-            highlight_rects=(5, 0),
-            overlay=[
-                TextLabel(40, 24, "Step 1", ACCENT_TERTIARY, size=22, weight="600"),
-                TextLabel(120, 24, "Recruiter drives the React console", TEXT_COLOR, size=20),
-                TextLabel(
-                    120,
-                    56,
-                    "FastAPI gathers JWT-secured patient context for AI planning.",
-                    TEXT_COLOR,
-                    size=16,
-                ),
-            ],
-        ),
-        FrameSpec(
-            highlight_rects=(1,),
-            overlay=[
-                TextLabel(40, 24, "Step 2", ACCENT_TERTIARY, size=22, weight="600"),
-                TextLabel(120, 24, "Async gRPC and Generative AI", TEXT_COLOR, size=20),
-                TextLabel(
-                    120,
-                    56,
-                    "ChatGPT or Gemini refine the care plan; heuristics backstop demos.",
-                    TEXT_COLOR,
-                    size=16,
-                ),
-            ],
-        ),
-        FrameSpec(
-            highlight_rects=(2, 3, 4),
-            overlay=[
-                TextLabel(40, 24, "Step 3", ACCENT_TERTIARY, size=22, weight="600"),
-                TextLabel(120, 24, "Polyglot data + caching", TEXT_COLOR, size=20),
-                TextLabel(
-                    120,
-                    56,
-                    "PostgreSQL, MongoDB, and Redis persist, audit, and accelerate access.",
-                    TEXT_COLOR,
-                    size=16,
-                ),
-            ],
-        ),
-        FrameSpec(
-            highlight_rects=(),
-            overlay=[
-                TextLabel(40, 24, "Step 4", ACCENT_TERTIARY, size=22, weight="600"),
-                TextLabel(120, 24, "Streaming + observability", TEXT_COLOR, size=20),
-                TextLabel(
-                    120,
-                    56,
-                    "Kafka events and Prometheus/Grafana close the feedback loop.",
-                    TEXT_COLOR,
-                    size=16,
-                ),
-            ],
-        ),
-    ]
-
-
-def draw_frame(rects: Sequence[RectSpec], labels: Sequence[TextLabel], frame: FrameSpec) -> Canvas:
-    canvas = Canvas(WIDTH, HEIGHT, BACKGROUND)
-    draw_grid(canvas)
-
-    highlighted_rects = []
-    for idx, rect in enumerate(rects):
-        fill = lighten(rect.fill) if idx in frame.highlight_rects else rect.fill
-        highlighted_rects.append(
-            RectSpec(rect.x, rect.y, rect.width, rect.height, fill, rect.labels)
-        )
-
-    draw_layout(canvas, highlighted_rects, list(labels) + list(frame.overlay))
-    return canvas
-
-
-def build_apng_bytes(frames: Sequence[Canvas], delay_ms: int = 900) -> bytes:
-    if not frames:
-        raise ValueError("At least one frame is required to build an animated PNG")
-
-    header = b"\x89PNG\r\n\x1a\n"
-    width, height = frames[0].width, frames[0].height
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
-
-    # Re-use existing chunk helper for consistency.
-    png_bytes = header + chunk(b"IHDR", ihdr)
-    png_bytes += chunk(b"acTL", struct.pack(">II", len(frames), 0))
-
-    delay_num = delay_ms
-    delay_den = 1000
-    sequence = 0
-
-    def frame_control(seq: int) -> bytes:
-        return struct.pack(
-            ">IIIIIHHBB",
-            seq,
-            width,
-            height,
-            0,
-            0,
-            delay_num,
-            delay_den,
-            0,
-            0,
-        )
-
-    # First frame uses IDAT chunks.
-    png_bytes += chunk(b"fcTL", frame_control(sequence))
-    sequence += 1
-    png_bytes += chunk(b"IDAT", zlib.compress(frames[0].render(), level=9))
-
-    for canvas in frames[1:]:
-        png_bytes += chunk(b"fcTL", frame_control(sequence))
-        sequence += 1
-        compressed = zlib.compress(canvas.render(), level=9)
-        png_bytes += chunk(b"fdAT", struct.pack(">I", sequence) + compressed)
-        sequence += 1
-
-    png_bytes += chunk(b"IEND", b"")
-    return png_bytes
-
-
-def write_apng(path: Path, frames: Sequence[Canvas], delay_ms: int = 900) -> None:
-    path.write_bytes(build_apng_bytes(frames, delay_ms))
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Render architecture diagrams for the README.")
     parser.add_argument(
         "--png",
         action="store_true",
         help="Also emit a PNG version alongside the tracked SVG (useful for slide decks).",
-    )
-    parser.add_argument(
-        "--apng",
-        action="store_true",
-        help="Emit an animated PNG walkthrough highlighting the recruiter journey.",
-    )
-    parser.add_argument(
-        "--embed",
-        action="store_true",
-        help="Print a data-URI version of the animated PNG for README embedding.",
     )
     return parser.parse_args()
 
@@ -458,22 +311,6 @@ def main() -> None:
         png_path = Path(__file__).with_name("live-topology.png")
         write_png(png_path, canvas)
         print(f"Wrote {png_path}")
-
-    if args.apng or args.embed:
-        frames = [draw_frame(rects, labels, frame) for frame in build_frames(rects)]
-        apng_bytes = build_apng_bytes(frames)
-
-        if args.apng:
-            apng_path = Path(__file__).with_name("workflow.apng")
-            apng_path.write_bytes(apng_bytes)
-            print(f"Wrote {apng_path}")
-
-        if args.embed:
-            data_uri = "data:image/png;base64," + base64.b64encode(apng_bytes).decode("ascii")
-            embed_path = Path(__file__).with_name("workflow.apng.data-uri")
-            embed_path.write_text(data_uri)
-            print(f"Wrote {embed_path}")
-            print(data_uri)
 
 
 if __name__ == "__main__":

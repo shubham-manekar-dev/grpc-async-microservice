@@ -1,5 +1,5 @@
 #%RAML 1.0
-title: Healthcare AI POC API
+title: Healthcare Intake API
 version: v1
 baseUri: http://localhost:8000
 mediaType: application/json
@@ -44,6 +44,14 @@ types:
     properties:
       patient: Patient
       care_plan: CarePlan
+  IntegrationStatus:
+    type: object
+    properties:
+      care_plan_grpc:
+        type: object
+        properties:
+          status: string
+          reason?: string
 
 /health:
   get:
@@ -54,6 +62,15 @@ types:
           application/json:
             example:
               status: ok
+
+/integrations:
+  get:
+    description: Report connectivity and readiness for downstream integrations.
+    responses:
+      200:
+        body:
+          application/json:
+            type: IntegrationStatus
 
 /patients:
   get:

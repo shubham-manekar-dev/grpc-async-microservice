@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package careplan;
+
+message VitalSigns {
+  double temperature_c = 1;
+  int32 heart_rate_bpm = 2;
+  int32 systolic_bp_mm_hg = 3;
+  int32 diastolic_bp_mm_hg = 4;
+}
+
+message IntakeRequest {
+  repeated string symptoms = 1;
+  VitalSigns vitals = 2;
+}
+
+message CarePlan {
+  string summary = 1;
+  repeated string suggested_tests = 2;
+  string triage_level = 3;
+}
+
+service CarePlanGenerator {
+  rpc GenerateCarePlan (IntakeRequest) returns (CarePlan);
+}

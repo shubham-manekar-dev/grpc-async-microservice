@@ -5,4 +5,11 @@ __pycache__/
 node_modules/
 dist/
 frontend/.vite/
+java-tests/target/
 .DS_Store
+data/
+test.db
+ci-smoke.db
+docs/live-topology.png
+docs/workflow.apng
+docs/workflow.apng.data-uri

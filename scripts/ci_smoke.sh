@@ -29,12 +29,13 @@ SERVER_PID=$!
 # Give the server a moment to start
 health_url="${API_BASE_URL%/}/health"
 
-for attempt in $(seq 1 30); do
+max_attempts=30
+for ((attempt = 1; attempt <= max_attempts; attempt++)); do
   if curl --fail --silent "$health_url" >/dev/null 2>&1; then
     break
   fi
   sleep 1
-  if [[ $attempt -eq 30 ]]; then
+  if (( attempt == max_attempts )); then
     echo "Service did not become healthy in time" >&2
     exit 1
   fi

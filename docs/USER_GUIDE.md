@@ -37,13 +37,22 @@ Launch everything with the guided startup script (ideal for the VS Code terminal
 ./scripts/start_project.sh
 ```
 
-The helper verifies Docker prerequisites, seeds a `.env` with heuristic AI defaults, builds the images,
-and waits for `/health` plus `/integrations` before printing the key URLs.
+The helper verifies Docker prerequisites, runs the merge-conflict scanner so future PRs avoid CI failures,
+seeds a `.env` with heuristic AI defaults, builds the images, and waits for `/health` plus `/integrations`
+before printing the key URLs.
 
 Prefer to control the stack manually? Run `docker compose up --build` and wait for the logs to show
 all services as healthy.
 
+> Skipping the script? Run `make check-conflicts` first so the guard that protects GitHub Actions will pass
+> when you open the next pull request.
+
 The stack exposes:
+```bash
+docker compose up --build
+```
+
+Wait for the services to report healthy in the logs. The stack exposes:
 
 | Service | URL | Notes |
 |---------|-----|-------|

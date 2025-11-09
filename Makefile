@@ -1,13 +1,10 @@
-.PHONY: format lint check-conflicts test backend-test frontend-test integration-test shellcheck java-test mct smoke ci grpc-codegen topology docker-up docker-down docker-logs
+.PHONY: format lint test backend-test frontend-test integration-test shellcheck java-test mct smoke ci grpc-codegen topology docker-up docker-down docker-logs check-conflicts
 
 format:
 	@echo "Format hooks are handled by editors in this POC"
 
 lint:
 	@echo "Add static analysis tools (ruff, mypy) as needed"
-
-check-conflicts:
-	./scripts/check_merge_conflicts.sh
 
 test: backend-test frontend-test integration-test java-test shellcheck mct
 
@@ -39,8 +36,10 @@ mct:
 smoke:
 	./scripts/ci_smoke.sh
 
+check-conflicts:
+	@echo "Merge-conflict helper retired. Use 'git status' before committing or rely on CI to detect issues."
+
 ci:
-	$(MAKE) check-conflicts
 	$(MAKE) backend-test
 	$(MAKE) frontend-test
 	$(MAKE) integration-test

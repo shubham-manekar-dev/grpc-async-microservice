@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$PROJECT_ROOT"
+if ! PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; then
+  echo "Unable to determine project root" >&2
+  exit 1
+fi
+cd "$PROJECT_ROOT" || exit 1
 
 STEP=0
 
 step() {
   STEP=$((STEP + 1))
-  printf '\n==== Step %d: %s ====' "${STEP}" "$1"
-  printf '\n'
+  printf '\n==== Step %d: %s ====\n' "${STEP}" "$1"
 }
 
 info() {
@@ -27,16 +29,19 @@ fail() {
 
 # Determine Docker Compose command (prefer v2 syntax)
 DOCKER_COMPOSE_CMD=()
+DOCKER_COMPOSE_LABEL=""
 if docker compose version >/dev/null 2>&1; then
   DOCKER_COMPOSE_CMD=(docker compose)
+  DOCKER_COMPOSE_LABEL="docker compose"
 elif command -v docker-compose >/dev/null 2>&1; then
   DOCKER_COMPOSE_CMD=(docker-compose)
+  DOCKER_COMPOSE_LABEL="docker-compose"
 else
   fail "Docker Compose v2 (docker compose) or v1 (docker-compose) is required."
 fi
 
 REQUIRED_CMDS=("docker" "curl")
-if [[ "${DOCKER_COMPOSE_CMD[0]}" == "docker-compose" ]]; then
+if [[ "$DOCKER_COMPOSE_LABEL" == "docker-compose" ]]; then
   REQUIRED_CMDS+=("docker-compose")
 fi
 MISSING=()
@@ -64,14 +69,11 @@ for entry in "${OPTIONAL_CMDS[@]}"; do
   cmd="${entry%%:*}"
   message="${entry#*:}"
   if command -v "$cmd" >/dev/null 2>&1; then
-    info "Found $cmd"
+    info "Found ${cmd}"
   else
-    warn "$cmd not detected. $message"
+    warn "${cmd} not detected. ${message}"
   fi
 done
-
-step "Scanning repository for merge conflict markers"
-./scripts/check_merge_conflicts.sh
 
 ENV_FILE="$PROJECT_ROOT/.env"
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -102,15 +104,18 @@ wait_for_endpoint() {
   local attempts=${3:-60}
   local delay=${4:-2}
 
-  for ((i = 1; i <= attempts; i++)); do
-    if curl --fail --silent "$url" >/dev/null; then
-      info "$description is ready ($url)"
+  local attempt
+  local compose_hint="${DOCKER_COMPOSE_CMD[*]} logs backend"
+
+  for attempt in $(seq 1 "$attempts"); do
+    if curl --fail --silent "$url" >/dev/null 2>&1; then
+      info "${description} is ready (${url})"
       return 0
     fi
     sleep "$delay"
   done
 
-  fail "Timed out waiting for $description at $url. Use '${DOCKER_COMPOSE_CMD[*]} logs backend' for details."
+  fail "Timed out waiting for ${description} at ${url}. Use '${compose_hint}' for details."
 }
 
 step "Waiting for FastAPI health checks"

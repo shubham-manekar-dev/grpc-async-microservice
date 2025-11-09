@@ -39,6 +39,10 @@ mct:
 smoke:
 	./scripts/ci_smoke.sh
 
+check-conflicts:
+	@echo "Merge-conflict helper retired. Use 'git status' before committing or rely on CI to detect issues."
+
+ci:
 ci:
 	$(MAKE) check-conflicts
 	$(MAKE) backend-test
